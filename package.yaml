@@ -20,15 +20,41 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/githubuser/shop-example#readme>
 
 dependencies:
-- base >= 4.7 && < 5
 - aeson
+- base >= 4.7 && < 5
+- bytestring
+- containers
+- http-media
+- relude
+- servant
 - servant-server
+- text
 - wai
 - warp
+
+default-extensions:
+- BlockArguments
+- DataKinds
+- DeriveGeneric
+- GADTs
+- LambdaCase
+- MultiParamTypeClasses
+- NoImplicitPrelude
+- OverloadedStrings
+- PartialTypeSignatures
+- RecordWildCards
+- ScopedTypeVariables
+- StandaloneDeriving
+- StandaloneKindSignatures
+- TemplateHaskell
+- TypeApplications
+- TypeFamilies
+- TypeOperators
 
 ghc-options:
 - -Wall
 - -Wcompat
+- -Wextra
 - -Widentities
 - -Wincomplete-record-updates
 - -Wincomplete-uni-patterns
@@ -36,6 +62,8 @@ ghc-options:
 - -Wmissing-home-modules
 - -Wpartial-fields
 - -Wredundant-constraints
+- -Wno-partial-type-signatures
+- -fshow-warning-groups
 
 library:
   source-dirs: src
