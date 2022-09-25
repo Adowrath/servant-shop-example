@@ -22,12 +22,15 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - aeson
 - base >= 4.7 && < 5
+- blaze-markup
 - bytestring
 - containers
 - http-media
 - relude
 - servant
+- servant-blaze
 - servant-server
+- shakespeare
 - text
 - wai
 - warp
@@ -42,6 +45,7 @@ default-extensions:
 - NoImplicitPrelude
 - OverloadedStrings
 - PartialTypeSignatures
+- QuasiQuotes
 - RecordWildCards
 - ScopedTypeVariables
 - StandaloneDeriving
