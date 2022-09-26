@@ -1,4 +1,9 @@
 .stack-work/
-.stack.yaml.lock
 .vscode
+
 stack.yaml.lock
+./data
+
+docs/
+!docs/*.tex
+!docs/*.pdf

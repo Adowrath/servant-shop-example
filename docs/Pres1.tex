@@ -1,0 +1,435 @@
+\documentclass[11pt,utf8,english,hyperref={hidelinks},table]{beamer}
+
+% \usepackage[table]{xcolor}
+\usepackage[english]{babel} 				% Deutsche Silbentrennung
+\usepackage[utf8]{inputenc}
+\usepackage[nopatch=footnote]{microtype}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{csquotes}
+\usepackage{array}
+
+\usepackage{parskip}
+\usepackage{comment}
+\usepackage[orig,english]{isodate}
+\usepackage[bottom]{footmisc}
+\usepackage{fancyhdr}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{transparent}
+
+\usepackage{float}
+\floatstyle{plain}
+\restylefloat{figure}
+\usepackage{minted}
+\setminted[]{frame=leftline, breaklines, breakbytoken, encoding=utf8, autogobble=true, fontsize=\footnotesize}
+\usemintedstyle{xcode}
+\makeatletter
+\renewcommand{\fps@listing}{htp}
+\makeatother
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, calc, shapes.multipart, arrows, matrix, positioning}
+\newcommand<>{\btikzset}[2]{\alt#3{\tikzset{#1}}{\tikzset{#2}}}
+\tikzset{onslide/.code args={<#1>#2}{%
+  \only<#1>{\pgfkeysalso{#2}} % \pgfkeysalso doesn't change the path
+}}
+\tikzset{temporal/.code args={<#1>#2#3#4}{%
+  \temporal<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}}{\pgfkeysalso{#4}} % \pgfkeysalso doesn't change the path
+}}
+
+% \usepackage[hidelinks]{hyperref}
+\urlstyle{same} % gleiche Schriftart für Hyperlinks.
+\hypersetup{
+  colorlinks,
+  linkcolor={red!50!black},
+  citecolor={blue!50!black},
+  urlcolor={blue!80!black}
+}
+
+\usetheme{Singapore}
+\usecolortheme{rose}
+
+\title{Servant, Shakespeare, Persistent}
+\subtitle{An overview, and \enquote{SQLi}}
+\author{Cyrill Brunner}
+\date{\today}
+
+\begin{document}
+
+  \begin{frame}
+    \titlepage
+  \end{frame}
+
+  \begin{frame}{What will I show you?}
+    \begin{itemize}[<+->]
+        \item Haskell, a functional language
+        \item Servant, a type-safe API definition DSL
+        \item Shakespeare, a HTML/CSS/JavaScript templater
+        \item Persistent, a backend-agnostic type-safe data serialization DSL
+    \end{itemize}
+  \end{frame}
+
+  \begin{frame}[fragile]{Haskell}
+    \begin{minted}{haskell}
+        primes = filterPrime [2..]
+            where filterPrime (p:xs) =
+                    p : filterPrime [x | x <- xs, x `mod` p /= 0]
+    \end{minted}
+    \pause
+    \begin{minted}{haskell}
+        data Maybe a
+          = Just a
+          | Nothing
+    \end{minted}
+    \pause
+    \begin{minted}{haskell}
+        data Expression a where
+            ExpInt    :: Int
+                      -> Expression Int
+            ExpBool   :: Bool
+                      -> Expression Bool
+            ExpAdd    :: Expression Int
+                      -> Expression Int
+                      -> Expression Int
+            ExpEquals :: Expression a
+                      -> Expression a
+                      -> Expression Bool
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Servant I}
+    \begin{minted}{haskell}
+        type API =
+            -- /api/product/ routes, can respond with JSON
+            "api" :> ToServantApi (RestAPI "product" '[JSON] Product)
+            :<|> 
+            -- GET /search?searchTerm=<term> returns HTML
+            "search" :> QueryParam "searchTerm" Text
+                     :> Get '[HTML] Html
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Servant II}
+    \begin{minted}{haskell}
+        -- ToServantApi (RestAPI "product" '[JSON] Product)
+        data RestAPI name encs res route = RestAPI
+          {
+           
+          ,
+           
+           
+          ,
+           
+           
+          ,
+           
+           
+          ,
+           
+           
+          } deriving (Generic)
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Servant II}
+    \begin{minted}{haskell}
+        -- ToServantApi (RestAPI "product" '[JSON] Product)
+        data RestAPI name encs res route = RestAPI
+          { _getAll    :: route :- name :> Get encs [res]
+            -- GET  /api/product       list of resources
+          , 
+            
+            
+          , 
+            
+            
+          , 
+            
+            
+          , 
+            
+            
+          } deriving (Generic)
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Servant II}
+    \begin{minted}{haskell}
+        -- ToServantApi (RestAPI "product" '[JSON] Product)
+        data RestAPI name encs res route = RestAPI
+          { _getAll    :: route :- name :> Get encs [res]
+            -- GET  /api/product       list of resources
+          , _addNew    :: route :- name 
+                       :> ReqBody encs res :> Verb 'POST 201 encs res
+            -- POST /api/product       add new resource
+          , 
+            
+            
+          , 
+            
+            
+          , 
+            
+            
+          } deriving (Generic)
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Servant II}
+    \begin{minted}{haskell}
+        -- ToServantApi (RestAPI "product" '[JSON] Product)
+        data RestAPI name encs res route = RestAPI
+          { _getAll    :: route :- name :> Get encs [res]
+            -- GET  /api/product       list of resources
+          , _addNew    :: route :- name 
+                       :> ReqBody encs res :> Verb 'POST 201 encs res
+            -- POST /api/product       add new resource
+          , _getSingle :: route :- name :> Capture "id" (Id res) 
+                       :> Get encs res
+            -- GET  /api/product/:id   find resource
+          , 
+            
+            
+          , 
+            
+            
+          } deriving (Generic)
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Servant II}
+    \begin{minted}{haskell}
+        -- ToServantApi (RestAPI "product" '[JSON] Product)
+        data RestAPI name encs res route = RestAPI
+          { _getAll    :: route :- name :> Get encs [res]
+            -- GET  /api/product       list of resources
+          , _addNew    :: route :- name 
+                       :> ReqBody encs res :> Verb 'POST 201 encs res
+            -- POST /api/product       add new resource
+          , _getSingle :: route :- name :> Capture "id" (Id res) 
+                       :> Get encs res
+            -- GET  /api/product/:id   find resource
+          , _replace   :: route :- name :> Capture "id" (Id res) 
+                       :> ReqBody encs res :> Put encs res
+            -- PUT  /api/product/:id   replace resource
+          ,
+        
+        
+          } deriving (Generic)
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Servant II}
+    \begin{minted}{haskell}
+        -- ToServantApi (RestAPI "product" '[JSON] Product)
+        data RestAPI name encs res route = RestAPI
+          { _getAll    :: route :- name :> Get encs [res]
+            -- GET  /api/product       list of resources
+          , _addNew    :: route :- name 
+                       :> ReqBody encs res :> Verb 'POST 201 encs res
+            -- POST /api/product       add new resource
+          , _getSingle :: route :- name :> Capture "id" (Id res) 
+                       :> Get encs res
+            -- GET  /api/product/:id   find resource
+          , _replace   :: route :- name :> Capture "id" (Id res) 
+                       :> ReqBody encs res :> Put encs res
+            -- PUT  /api/product/:id   replace resource
+          , _delete    :: route :- name :> Capture "id" (Id res) 
+                       :> Verb 'DELETE 204 encs NoContent
+            -- DELETE /api/product/:id delete resource
+          } deriving (Generic)
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Servant III}
+    \begin{minted}{haskell}
+        productsRestApi ::
+          Server ("api" :> ToServantApi (RestAPI "product" '[JSON] Product))
+        productsRestApi :: RestAPI "product" '[JSON] Product AsServer
+        productsRestApi = toServantApi (RestAPI {..})
+          where _getAll    ::                         Handler [Product]
+                _addNew    ::              Product -> Handler Product
+                _getSingle :: ProductId ->            Handler Product
+                _replace   :: ProductId -> Product -> Handler Product
+                _delete    :: ProductId ->            Handler NoContent
+                ...
+
+        searchApi :: Server ("search" :> QueryParam "searchTerm" Text
+                                      :> Get '[HTML] Html)
+        searchApi :: Maybe Text -> Handler Html
+        searchApi filterTerm = do
+          ...
+
+          pure htmlAnswer
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Servant IV}
+    \begin{minted}{haskell}
+        searchApi :: Maybe Text -> ClientM Html
+        searchApi = client ("search" :> QueryParam "searchTerm" Text :> Get '[HTML] Html)
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Servant V}
+    \begin{itemize}[<+->]
+        \item \texttt{servant}
+        \item \texttt{servant-server}
+        \item \texttt{servant-auth}
+        \item \texttt{servant-client}
+        \item \texttt{servant-js} and \texttt{servant-foreign}
+        \item \texttt{servant-blaze} vs. \texttt{servant-lucid}
+        \item \texttt{servant-docs}
+        \item \texttt{servant-swagger} and \texttt{servant-swagger-ui}
+        \item \texttt{servant-streaming} and \texttt{servant-conduit}
+    \end{itemize}
+  \end{frame}
+
+  \begin{frame}[fragile]{Shakespeare I}
+    \begin{minted}{haskell}
+        pure $ unlines
+          [ "<!DOCTYPE html>"
+          , "<html><head><title>Search Interface</title></head><body>"
+          , "<script>"
+          , "function addItem(productId, name, description) {"
+          , "  const list = document.getElementById('list');"
+          , "  if(list instanceof HTMLDivElement) {"
+          , "    const parent = list.parentElement;"
+          , "    list.remove();"
+          , "    parent.innerHTML +="
+          , "      `<ul><li>"
+          , "        (${productId}) - ${name}: ${description}</ul>`;"
+          , "  } else {"
+          , "    list.innerHTML +="
+          , "      `<li> (${productId}) - ${name}: ${description}`;"
+          , "  }"
+          , "}"
+          , ...
+          ]
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Shakespeare II}
+    \begin{minted}{haskell}
+        pure [shamlet|
+            $doctype 5
+            <html>
+                <head>
+                    <title>Search Interface
+                    <script>
+                    #{preEscapedToMarkup script}
+                <body>
+                    ...
+        |]
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Shakespeare III}
+    \begin{minted}{haskell}
+        script :: Text
+        script = toStrict $ renderJavascriptUrl undefined [julius|
+          function addItem(productId, name, description) {
+            const list = document.getElementById('list');
+            if(list instanceof HTMLDivElement) {
+              const parent = list.parentElement;
+              list.remove();
+              parent.innerHTML +=
+                `<ul><li> (${productId}) - ${name}: ${description}</ul>`;
+            } else {
+              list.innerHTML +=
+                `<li> (${productId}) - ${name}: ${description}`;
+            }
+          }
+          ...
+        |]
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Persistent I}
+    \begin{minted}{haskell}
+      share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
+      Product
+        name        Text
+        description Text
+  
+        deriving Show
+        deriving Eq
+    
+      User
+        username Text
+    
+      InShoppingCart
+        user    UserId
+        product ProductId
+        qty     Int
+      |]
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Persistent II}
+    \begin{minted}{haskell}
+      allMigrations = do
+        Product.migrateAll
+        OtherModule.migrateAll
+
+      main = do
+        runMigration allMigrations
+        
+        sqlPool <- createPoolConfig (MySQLConfig ...)
+
+        let application = 
+                hoistServer (...) api
+                    & serve
+                    & ...
+                    & cacheMiddleware cacheConfig
+                    & gzipMiddleware
+                    & loggingMiddleware
+
+        run 8080 application
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Persistent III}
+    \begin{minted}{haskell}
+      searchApi filterTerm = do
+        products :: [Entity Product] <- runSqlPool (
+          selectList
+            (maybe [] 
+                  (\term -> [ProductName `like` term] 
+                        ||. [ProductDescription `like` term])
+                filterTerm
+            )
+            []
+          ) pool
+        ...
+
+      f `like` a =
+        Filter f (FilterValue a) (BackendSpecificFilter "LIKE")
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Persistent IV}
+    \begin{minted}{haskell}
+      dbRestAPI = toServant RestAPI { .. }
+        where
+          _getAll' = runDB (DB.selectList [] [])
+          _addNew' res = do
+              idx <- runDB (DB.insert res)
+              pure $ Entity idx res
+          _getSingle' idx =
+              Entity idx
+                <$> whenNothingM (runDB (DB.get idx)) 
+                                 (throwError err404)
+          _replace' idx res = do
+              runDB (DB.repsert idx res)
+              pure $ Entity idx res
+          _delete' key = do
+              runDB (DB.delete key)
+              pure NoContent
+    \end{minted}
+  \end{frame}
+\end{document}
+
