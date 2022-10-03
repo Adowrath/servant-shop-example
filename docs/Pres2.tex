@@ -1,0 +1,281 @@
+\documentclass[11pt,utf8,english,hyperref={hidelinks},table]{beamer}
+
+% \usepackage[table]{xcolor}
+\usepackage[english]{babel} 				% Deutsche Silbentrennung
+\usepackage[utf8]{inputenc}
+\usepackage[nopatch=footnote]{microtype}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{csquotes}
+\usepackage{array}
+
+\usepackage{parskip}
+\usepackage{comment}
+\usepackage[orig,english]{isodate}
+\usepackage[bottom]{footmisc}
+\usepackage{fancyhdr}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{transparent}
+
+\usepackage{float}
+\floatstyle{plain}
+\restylefloat{figure}
+\usepackage{minted}
+\setminted[]{frame=leftline, breaklines, breakbytoken, encoding=utf8, autogobble=true, fontsize=\footnotesize}
+\usemintedstyle{xcode}
+\makeatletter
+\renewcommand{\fps@listing}{htp}
+\makeatother
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, calc, shapes.multipart, arrows, matrix, positioning}
+\newcommand<>{\btikzset}[2]{\alt#3{\tikzset{#1}}{\tikzset{#2}}}
+\tikzset{onslide/.code args={<#1>#2}{%
+  \only<#1>{\pgfkeysalso{#2}} % \pgfkeysalso doesn't change the path
+}}
+\tikzset{temporal/.code args={<#1>#2#3#4}{%
+  \temporal<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}}{\pgfkeysalso{#4}} % \pgfkeysalso doesn't change the path
+}}
+
+% \usepackage[hidelinks]{hyperref}
+\urlstyle{same} % gleiche Schriftart für Hyperlinks.
+\hypersetup{
+  colorlinks,
+  linkcolor={red!50!black},
+  citecolor={blue!50!black},
+  urlcolor={blue!80!black}
+}
+
+\usetheme{Singapore}
+\usecolortheme{rose}
+
+\title{Servant and XSS/CSRF}
+\subtitle{This is very quick}
+\author{Cyrill Brunner}
+\date{\today}
+
+\begin{document}
+
+  \begin{frame}
+    \titlepage
+  \end{frame}
+
+  \begin{frame}{What will I show you?}
+    \begin{itemize}[<+->]
+        \item CSRF Protection with \texttt{servant-auth(-server)}
+        \item XSS Protection with \texttt{shakespeare}
+    \end{itemize}
+  \end{frame}
+
+  \section{CSRF}
+
+  \begin{frame}[fragile]{CSRF}
+    \begin{minted}{haskell}
+        type API = ...
+
+        
+        server :: Server API
+
+        main = do
+          ...
+
+          
+          
+          
+          
+          
+
+          
+
+          run 8080 $ serve
+            (Proxy :: Proxy API)
+            
+            server
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{CSRF}
+    \begin{minted}{haskell}
+        type API = ...
+
+        type SecuredAPI = Auth '[Cookie] LoginToken :> API
+        securedServer :: Server SecuredAPI
+
+        main = do
+          ...
+
+          
+          
+          
+          
+          
+
+          
+
+          run 8080 $ serve
+            (Proxy :: Proxy SecuredAPI)
+            
+            securedServer
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{CSRF}
+    \begin{minted}{haskell}
+        type API = ...
+
+        type SecuredAPI = Auth '[Cookie] LoginToken :> API
+        securedServer :: Server SecuredAPI
+
+        main = do
+          ...
+
+          
+
+
+
+
+
+          
+
+          run 8080 $ serveWithContext 
+            (Proxy :: Proxy SecuredAPI)
+            (jwtSettings :. cookieSettings :. EmptyContext)
+            securedServer
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{CSRF}
+    \begin{minted}{haskell}
+        type API = ...
+
+        type SecuredAPI = Auth '[Cookie] LoginToken :> API
+        securedServer :: Server SecuredAPI
+
+        main = do
+          ...
+
+          xsrfCookieSettings = def { xsrfExcludeGet = True }
+          
+          
+          
+          
+
+          
+
+          run 8080 $ serveWithContext 
+            (Proxy :: Proxy SecuredAPI)
+            (jwtSettings :. cookieSettings :. EmptyContext)
+            securedServer
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{CSRF}
+    \begin{minted}{haskell}
+        type API = ...
+
+        type SecuredAPI = Auth '[Cookie] LoginToken :> API
+        securedServer :: Server SecuredAPI
+
+        main = do
+          ...
+
+          xsrfCookieSettings = def { xsrfExcludeGet = True }
+          cookieSettings
+            = def { cookieXsrfSetting = Just xsrfCookieSettings
+                  , cookieMaxAge = Just (60 * 60 * 24 * 7) -- 7 days
+                  }
+
+          
+
+          run 8080 $ serveWithContext 
+            (Proxy :: Proxy SecuredAPI)
+            (jwtSettings :. cookieSettings :. EmptyContext)
+            securedServer
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{CSRF}
+    \begin{minted}{haskell}
+        type API = ...
+
+        type SecuredAPI = Auth '[Cookie] LoginToken :> API
+        securedServer :: Server SecuredAPI
+
+        main = do
+          ...
+
+          xsrfCookieSettings = def { xsrfExcludeGet = True }
+          cookieSettings
+            = def { cookieXsrfSetting = Just xsrfCookieSettings
+                  , cookieMaxAge = Just (60 * 60 * 24 * 7) -- 7 days
+                  }
+
+          jwtSettings = ...
+
+          run 8080 $ serveWithContext 
+            (Proxy :: Proxy SecuredAPI)
+            (jwtSettings :. cookieSettings :. EmptyContext)
+            securedServer
+    \end{minted}
+  \end{frame}
+
+  \section{XSS}
+
+  \begin{frame}{XSS}
+    \Large XSS Protection is the default in Shakespeare!
+    
+  \end{frame}
+
+  \begin{frame}[fragile]{XSS - Hamlet}
+    \begin{minted}{haskell}
+        handle userInput = do
+          ...
+
+          pure [shamlet|
+            <p>You gave us: #{userInput}
+            <p>Without interpolation: #{preEscapedToMarkup userInput}
+          |]
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{XSS - Cassius}
+    \begin{minted}{haskell}
+      pure $ [cassius|
+        .page-container
+          background-color: #{userThemeColor}
+          h1
+            font-size: #{userThemeFontSize}
+
+            
+      |] undefined
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{XSS - Lucius}
+    \begin{minted}{haskell}
+      pure $ [lucius|
+        .page-container {
+          background-color: #{userThemeColor}
+          h1 {
+            font-size: #{userThemeFontSize}
+          }
+        }   
+      |] undefined
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{XSS - Julius}
+    \begin{minted}{haskell}
+      pure $ [julius|
+        const userPreferences = JSON.parse("#{userPreferences}");
+        document
+          .querySelector(".#{rawJS greetingClassName}")
+          .textContent = userPreferences.personalGreeting;
+      |] undefined
+    \end{minted}
+  \end{frame}
+\end{document}
+

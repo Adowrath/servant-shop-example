@@ -1,0 +1,214 @@
+\documentclass[11pt,utf8,english,hyperref={hidelinks},table]{beamer}
+
+% \usepackage[table]{xcolor}
+\usepackage[english]{babel} 				% Deutsche Silbentrennung
+\usepackage[utf8]{inputenc}
+\usepackage[nopatch=footnote]{microtype}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{csquotes}
+\usepackage{array}
+
+\usepackage{parskip}
+\usepackage{comment}
+\usepackage[orig,english]{isodate}
+\usepackage[bottom]{footmisc}
+\usepackage{fancyhdr}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{transparent}
+
+\usepackage{float}
+\floatstyle{plain}
+\restylefloat{figure}
+\usepackage{minted}
+\setminted[]{frame=leftline, breaklines, breakbytoken, encoding=utf8, autogobble=true, fontsize=\footnotesize}
+\usemintedstyle{xcode}
+\makeatletter
+\renewcommand{\fps@listing}{htp}
+\makeatother
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, calc, shapes.multipart, arrows, matrix, positioning}
+\newcommand<>{\btikzset}[2]{\alt#3{\tikzset{#1}}{\tikzset{#2}}}
+\tikzset{onslide/.code args={<#1>#2}{%
+  \only<#1>{\pgfkeysalso{#2}} % \pgfkeysalso doesn't change the path
+}}
+\tikzset{temporal/.code args={<#1>#2#3#4}{%
+  \temporal<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}}{\pgfkeysalso{#4}} % \pgfkeysalso doesn't change the path
+}}
+
+% \usepackage[hidelinks]{hyperref}
+\urlstyle{same} % gleiche Schriftart für Hyperlinks.
+\hypersetup{
+  colorlinks,
+  linkcolor={red!50!black},
+  citecolor={blue!50!black},
+  urlcolor={blue!80!black}
+}
+
+\usetheme{Singapore}
+\usecolortheme{rose}
+
+\title{Servant - Handout}
+\subtitle{A quick run-through of Servant and why}
+\author{Cyrill Brunner}
+\date{\today}
+
+\begin{document}
+
+  \begin{frame}
+    \titlepage
+  \end{frame}
+
+
+  \begin{frame}
+    \begin{itemize}[<+->]
+      \item Servant is a type-level DSL
+      \item Written in Haskell
+      \item Encoding as much as possible on the type-level
+      \item Enables automatic derivation of:
+      \item Server-side function signatures
+      \item Client-side accessor functions (in Haskell, but also JS etc.)
+      \item Documentation
+      \item Swagger/OpenAPI Specification
+    \end{itemize}
+  \end{frame}
+
+  \begin{frame}
+    \begin{itemize}[<+->]
+      \item Written to be extensible and pluggable
+      \item Ad-hoc extension/wrapping of existing features supported!
+      \item Easy introduction of new API parameter/return types -- e.g. just auto-derive ToJSON/FromJSON instances!
+      \item Require authentication for an entire section of your server? Just pluck \texttt{Auth '[JWT, Cookie] LoginToken}
+            before it
+      \item \texttt{LoginToken} not enough? Easy, write a wrapper that queries your database and verifies the token automatically!
+      \item And so on...
+    \end{itemize}
+  \end{frame}
+
+  \begin{frame}
+    Check \url{https://docs.servant.dev/} -- The tutorial introduces core concepts, the Cookbook shows
+    popular libraries, patterns etc. contributed by the community.
+  \end{frame}
+
+  \begin{frame}{Haskell I}
+    \begin{itemize}[<+->]
+      \item Pure -- No mutation in the language
+      \item Lazy -- Evaluation only when necessary
+      \item Functional -- Write your program by composing functions
+      \item How to \textbf{do} Anything $\rightarrow$ Effects!
+    \end{itemize}
+  \end{frame}
+
+  \begin{frame}{Haskell II}
+    \begin{itemize}[<+->]
+      \item \texttt{IO} is the catch-all effect for Input/Output
+      \item \texttt{IORef}, \texttt{MVar} -- mutable \enquote{cells} for state
+      \item \texttt{Reader} -- Immutable, read-only environment (usable for config)
+      \item \texttt{State} -- Mutable environment by passing it along implicitly
+      \item \texttt{Except} -- Exceptions and catching them
+      \item \texttt{List} -- Usable for non-determinism
+      \item \texttt{Writer} -- Collect output (generally not for Logging)
+    \end{itemize}
+  \end{frame}
+
+  \begin{frame}{Haskell III}
+    \begin{itemize}[<+->]
+      \item \texttt{RWS} -- ReaderWriterState
+      \item \texttt{Accum} -- Append-only version of State/Writer with ability to see previous output
+      \item \texttt{Cont} -- Continuations, don't @me
+      \item \texttt{Select} -- Selection, for search algorithms, first time I've heard it pleasedon'taskmeIdon'tknow
+      \item \texttt{SMT} -- Software Transactional Memory $\rightarrow$ deadlock-free, race-free atomic concurrent state
+      \item \texttt{Logging} -- Well, Logging
+      \item \textit{Roll your own}
+    \end{itemize}
+  \end{frame}
+
+  \begin{frame}[fragile]{Example}
+    \begin{minted}{haskell}
+      {-# LANGUAGE DataKinds #-}
+      {-# LANGUAGE DeriveGeneric #-}
+      {-# LANGUAGE TypeOperators #-}
+      {-# LANGUAGE BlockArguments #-}
+      {-# LANGUAGE DeriveAnyClass #-}
+      {-# LANGUAGE RecordWildCards #-}
+      {-# LANGUAGE DerivingStrategies #-}
+      module Main where
+      
+      import Control.Monad.IO.Class   ( liftIO )
+      import Data.Aeson               ( ToJSON, FromJSON )
+      import Data.IORef               ( IORef, newIORef
+                                      , readIORef, writeIORef
+                                      , modifyIORef
+                                      )
+      import Data.Proxy               ( Proxy )
+      import GHC.Generics             ( Generic )
+      import Network.Wai.Handler.Warp ( run )
+      import Servant.API
+      import Servant.Server
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Example}
+    \begin{minted}{haskell}
+      data Counter = Counter { count :: Int, lastModification :: Int }
+        deriving stock (Eq, Show, Generic)
+        deriving anyclass (FromJSON, ToJSON)
+      
+      type API =
+        -- GET /count, returns { "count": 20, "lastModification": 0 }
+        "count" :> Get '[JSON] Counter
+        -- POST /add with Int as JSON, returns new Counter
+        :<|> "add" :> ReqBody '[JSON] Int :> Post '[JSON] Counter
+        -- POST /subtract with Int as JSON, returns nothing
+        :<|> "subtract" :> ReqBody '[JSON] Int :> NoContentVerb 'POST
+    \end{minted}
+  \end{frame}
+  
+  \begin{frame}[fragile]{Example}
+    \begin{minted}{haskell}
+      -- Server ("count" :> Get '[JSON] Counter)
+      getCount :: IORef Counter -> Handler Counter
+      getCount ref = liftIO $ readIORef ref
+      
+      -- Server ("add" :> ReqBody '[JSON] Int :> Post '[JSON] Counter)
+      addCount :: IORef Counter -> Int -> Handler Counter
+      addCount ref i = do
+        Counter {..} <- liftIO $ readIORef ref
+        let counter = Counter { count = count + i
+                              , lastModification = i
+                              }
+        liftIO $ writeIORef ref counter
+        return counter
+    \end{minted}
+  \end{frame}
+  
+  \begin{frame}[fragile]{Example}
+    \begin{minted}{haskell}
+      -- Server ("subtract" :> ReqBody '[JSON] Int :> NoContentVerb 'POST)
+      subCount :: IORef Counter -> Int -> Handler NoContent
+      subCount ref i = do
+        liftIO
+          $ modifyIORef ref
+          $ \Counter {..} -> Counter { count = count-i
+                                     , lastModification = (-i)
+                                     }
+        return NoContent
+      
+      server :: IORef Counter -> Server API
+      server ref = getCount ref :<|> addCount ref :<|> subCount ref
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Example}
+    \begin{minted}{haskell}
+      main :: IO ()
+      main = do
+        ref <- newIORef $ Counter 0 0
+        run 8080 $ serve (Proxy :: Proxy API) $ server ref
+    \end{minted}    
+  \end{frame}
+\end{document}
