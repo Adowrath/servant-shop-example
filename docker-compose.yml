@@ -1,0 +1,19 @@
+version: '2'
+
+services:
+  shop-example:
+    image: shop-example
+    container_name: shop-example
+    ports:
+      - 8080:8080
+    depends_on:
+      - database
+  
+  database:
+    image: mariadb
+    container_name: database
+    volumes:
+      - ./data:/var/lib/mysql:rw
+    environment:
+      MARIADB_ROOT_PASSWORD: secret
+      MARIADB_DATABASE: test
