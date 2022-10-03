@@ -22,7 +22,7 @@ import Database.Persist.Sql as DB
 
 class MonadIO m => MonadDB backend m where
     runDB :: ReaderT backend IO a
-           -> m a
+          -> m a
 ~~~
 
 Note that currently, the `ReaderT`-stack is restricted to an underlying `IO` monad.

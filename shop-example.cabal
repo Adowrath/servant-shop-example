@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Lib
+      MonadDB
       Product
       RestApi
   other-modules:
@@ -33,38 +34,53 @@ library
   hs-source-dirs:
       src
   default-extensions:
-      BlockArguments
-      DataKinds
-      DeriveGeneric
-      GADTs
-      LambdaCase
-      MultiParamTypeClasses
       NoImplicitPrelude
-      OverloadedStrings
+      BlockArguments
+      DerivingStrategies
+      InstanceSigs
+      LambdaCase
+      OverloadedRecordDot
       PartialTypeSignatures
-      QuasiQuotes
-      RecordWildCards
-      ScopedTypeVariables
       StandaloneDeriving
       StandaloneKindSignatures
-      TemplateHaskell
       TypeApplications
+      MultiParamTypeClasses
+      DeriveGeneric
+      GADTs
+      OverloadedStrings
+      RecordWildCards
+      ScopedTypeVariables
+      ConstraintKinds
+      DataKinds
       TypeFamilies
       TypeOperators
-  ghc-options: -Wall -Wcompat -Wextra -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wno-partial-type-signatures -fshow-warning-groups
+      TemplateHaskell
+      QuasiQuotes
+      FlexibleContexts
+  ghc-options: -Wall -Wcompat -Wextra -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wno-partial-type-signatures -fshow-warning-groups -pgmL markdown-unlit
+  build-tool-depends:
+      markdown-unlit:markdown-unlit
   build-depends:
       aeson
     , base >=4.7 && <5
     , blaze-markup
     , bytestring
     , containers
+    , http-api-data
     , http-media
+    , monad-logger
+    , mtl
+    , persistent
     , relude
+    , resource-pool
     , servant
+    , servant-auth
+    , servant-auth-server
     , servant-blaze
     , servant-server
     , shakespeare
     , text
+    , unliftio-core
     , wai
     , warp
   default-language: Haskell2010
@@ -76,39 +92,55 @@ executable shop-example-exe
   hs-source-dirs:
       app
   default-extensions:
-      BlockArguments
-      DataKinds
-      DeriveGeneric
-      GADTs
-      LambdaCase
-      MultiParamTypeClasses
       NoImplicitPrelude
-      OverloadedStrings
+      BlockArguments
+      DerivingStrategies
+      InstanceSigs
+      LambdaCase
+      OverloadedRecordDot
       PartialTypeSignatures
-      QuasiQuotes
-      RecordWildCards
-      ScopedTypeVariables
       StandaloneDeriving
       StandaloneKindSignatures
-      TemplateHaskell
       TypeApplications
+      MultiParamTypeClasses
+      DeriveGeneric
+      GADTs
+      OverloadedStrings
+      RecordWildCards
+      ScopedTypeVariables
+      ConstraintKinds
+      DataKinds
       TypeFamilies
       TypeOperators
-  ghc-options: -Wall -Wcompat -Wextra -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wno-partial-type-signatures -fshow-warning-groups -threaded -rtsopts -with-rtsopts=-N
+      TemplateHaskell
+      QuasiQuotes
+      FlexibleContexts
+  ghc-options: -Wall -Wcompat -Wextra -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wno-partial-type-signatures -fshow-warning-groups -pgmL markdown-unlit -threaded -rtsopts -with-rtsopts=-N
+  build-tool-depends:
+      markdown-unlit:markdown-unlit
   build-depends:
       aeson
     , base
     , blaze-markup
     , bytestring
     , containers
+    , http-api-data
     , http-media
+    , monad-logger
+    , mtl
+    , persistent
+    , persistent-mysql
     , relude
+    , resource-pool
     , servant
+    , servant-auth
+    , servant-auth-server
     , servant-blaze
     , servant-server
     , shakespeare
     , shop-example
     , text
+    , unliftio-core
     , wai
     , warp
   default-language: Haskell2010
@@ -121,25 +153,32 @@ test-suite shop-example-test
   hs-source-dirs:
       test
   default-extensions:
-      BlockArguments
-      DataKinds
-      DeriveGeneric
-      GADTs
-      LambdaCase
-      MultiParamTypeClasses
       NoImplicitPrelude
-      OverloadedStrings
+      BlockArguments
+      DerivingStrategies
+      InstanceSigs
+      LambdaCase
+      OverloadedRecordDot
       PartialTypeSignatures
-      QuasiQuotes
-      RecordWildCards
-      ScopedTypeVariables
       StandaloneDeriving
       StandaloneKindSignatures
-      TemplateHaskell
       TypeApplications
+      MultiParamTypeClasses
+      DeriveGeneric
+      GADTs
+      OverloadedStrings
+      RecordWildCards
+      ScopedTypeVariables
+      ConstraintKinds
+      DataKinds
       TypeFamilies
       TypeOperators
-  ghc-options: -Wall -Wcompat -Wextra -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wno-partial-type-signatures -fshow-warning-groups -threaded -rtsopts -with-rtsopts=-N
+      TemplateHaskell
+      QuasiQuotes
+      FlexibleContexts
+  ghc-options: -Wall -Wcompat -Wextra -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wno-partial-type-signatures -fshow-warning-groups -pgmL markdown-unlit -threaded -rtsopts -with-rtsopts=-N
+  build-tool-depends:
+      markdown-unlit:markdown-unlit
   build-depends:
       aeson
     , base
@@ -149,14 +188,22 @@ test-suite shop-example-test
     , hspec
     , hspec-wai
     , hspec-wai-json
+    , http-api-data
     , http-media
+    , monad-logger
+    , mtl
+    , persistent
     , relude
+    , resource-pool
     , servant
+    , servant-auth
+    , servant-auth-server
     , servant-blaze
     , servant-server
     , shakespeare
     , shop-example
     , text
+    , unliftio-core
     , wai
     , warp
   default-language: Haskell2010

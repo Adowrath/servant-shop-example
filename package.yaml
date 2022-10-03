@@ -25,35 +25,58 @@ dependencies:
 - blaze-markup
 - bytestring
 - containers
+- http-api-data
 - http-media
+- mtl
+- monad-logger
+- persistent
 - relude
+- resource-pool
 - servant
+- servant-auth
+- servant-auth-server
 - servant-blaze
 - servant-server
 - shakespeare
 - text
+- unliftio-core
 - wai
 - warp
 
 default-extensions:
-- BlockArguments
-- DataKinds
-- DeriveGeneric
-- GADTs
-- LambdaCase
-- MultiParamTypeClasses
 - NoImplicitPrelude
-- OverloadedStrings
+
+# Syntactic additions
+- BlockArguments
+- DerivingStrategies
+- InstanceSigs
+- LambdaCase
+- OverloadedRecordDot
 - PartialTypeSignatures
-- QuasiQuotes
-- RecordWildCards
-- ScopedTypeVariables
 - StandaloneDeriving
 - StandaloneKindSignatures
-- TemplateHaskell
 - TypeApplications
+
+# Extended features
+- MultiParamTypeClasses
+- DeriveGeneric
+- GADTs
+- OverloadedStrings
+- RecordWildCards
+- ScopedTypeVariables
+
+# Type-level operations
+- ConstraintKinds
+- DataKinds
 - TypeFamilies
 - TypeOperators
+
+# TH and QuasiQuotation
+- TemplateHaskell
+- QuasiQuotes
+
+# Not fully stable features
+- FlexibleContexts
 
 ghc-options:
 - -Wall
@@ -68,6 +91,10 @@ ghc-options:
 - -Wredundant-constraints
 - -Wno-partial-type-signatures
 - -fshow-warning-groups
+- -pgmL markdown-unlit
+
+build-tools:
+- markdown-unlit
 
 library:
   source-dirs: src
@@ -83,6 +110,7 @@ executables:
     dependencies:
     - base
     - shop-example
+    - persistent-mysql
 
 tests:
   shop-example-test:
