@@ -2,8 +2,8 @@
 .vscode
 
 stack.yaml.lock
-./data
+data/
 
-docs/
+docs/*
 !docs/*.tex
 !docs/*.pdf
