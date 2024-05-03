@@ -1,0 +1,230 @@
+\documentclass[11pt,utf8,english,hyperref={hidelinks},table]{beamer}
+
+% \usepackage[table]{xcolor}
+\usepackage[english]{babel} 				% Deutsche Silbentrennung
+\usepackage[utf8]{inputenc}
+\usepackage[nopatch=footnote]{microtype}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{csquotes}
+\usepackage{array}
+
+\usepackage{parskip}
+\usepackage{comment}
+\usepackage[orig,english]{isodate}
+\usepackage[bottom]{footmisc}
+\usepackage{fancyhdr}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{transparent}
+
+\usepackage{float}
+\floatstyle{plain}
+\restylefloat{figure}
+\usepackage{minted}
+\setminted[]{frame=leftline, breaklines, breakbytoken, encoding=utf8, autogobble=true, fontsize=\footnotesize}
+\usemintedstyle{xcode}
+\makeatletter
+\renewcommand{\fps@listing}{htp}
+\makeatother
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, calc, shapes.multipart, arrows, matrix, positioning}
+\newcommand<>{\btikzset}[2]{\alt#3{\tikzset{#1}}{\tikzset{#2}}}
+\tikzset{onslide/.code args={<#1>#2}{%
+  \only<#1>{\pgfkeysalso{#2}} % \pgfkeysalso doesn't change the path
+}}
+\tikzset{temporal/.code args={<#1>#2#3#4}{%
+  \temporal<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}}{\pgfkeysalso{#4}} % \pgfkeysalso doesn't change the path
+}}
+
+% \usepackage[hidelinks]{hyperref}
+\urlstyle{same} % gleiche Schriftart für Hyperlinks.
+\hypersetup{
+  colorlinks,
+  linkcolor={red!50!black},
+  citecolor={blue!50!black},
+  urlcolor={blue!80!black}
+}
+
+\usetheme{Singapore}
+\usecolortheme{rose}
+
+\title{Passwords in Servant}
+\subtitle{This is very quick}
+\author{Cyrill Brunner}
+\date{\today}
+
+\begin{document}
+
+  \begin{frame}
+    \titlepage
+  \end{frame}
+
+  \begin{frame}{What will I show you?}
+    \begin{itemize}[<+->]
+        \item Scrypt
+    \end{itemize}
+  \end{frame}
+
+  \section{Scrypt}
+
+  \begin{frame}[fragile]{Scrypt}
+      \texttt{scrypt} takes 4 parameters:
+      \begin{itemize}[<+->]
+        \item \texttt{N} - A power of 2, the \enquote{Cost factor}
+        \item \texttt{r} - The \enquote{Block size factor}
+        \item \texttt{p} - The \enquote{Parallelization factor}
+        \item Desired key length
+      \end{itemize}
+      \pause
+      The memory used is defined by $N * r * p$. $r * p < 2^{30}$.
+      \pause
+      Defaults used in the \texttt{scrypt} library, using $log_2(N)$ instead:
+      \pause
+      \begin{minted}{haskell}
+        log_2(N) = 14
+        r        =  8
+        p        =  1
+        keyLen   = 64
+        -- from `defaultParams`
+        -- 128 * 8 * 2^14 = 16MB
+      \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Scrypt}
+    \begin{minted}{haskell}
+      do 
+        let password = Pass "myPassword"
+            keyParams = defaultParams
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Scrypt}
+    \begin{minted}{haskell}
+      do 
+        let password = Pass "myPassword"
+            keyParams = defaultParams
+        
+        mySalt <- newSalt
+        
+        
+        
+        
+        
+        
+        
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Scrypt}
+    \begin{minted}{haskell}
+      do 
+        let password = Pass "myPassword"
+            keyParams = defaultParams
+        
+        mySalt <- newSalt -- /dev/urandom, or CryptoAPI on Windows
+        
+        let encrypted = encryptPass keyParams mySalt password
+
+        print encrypted
+        -- EncryptedPass {
+        --   getEncryptedPass = "14|8|1|..salt..|..hash.."
+        -- }
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Scrypt}
+    \begin{minted}{haskell}
+      do 
+        let password = Pass "myPassword"
+            keyParams = defaultParams
+        
+        
+        encrypted <- encryptIO keyParams password
+        -- uses `newSalt` internally
+
+        print encrypted
+        -- EncryptedPass {
+        --   getEncryptedPass = "14|8|1|..salt..|..hash.."
+        -- }
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Scrypt}
+    \begin{minted}{haskell}
+        print $ verifyPass keyParams (Pass "myPassword") encrypted
+        -- (True, Nothing)
+        
+        
+
+        
+        
+        
+        
+        
+        
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Scrypt}
+    \begin{minted}{haskell}
+        print $ verifyPass keyParams (Pass "myPassword") encrypted
+        -- (True, Nothing)
+        print $ verifyPass keyParams (Pass "MyPassword") encrypted
+        -- (False, Nothing)
+
+        
+        
+        
+        
+        
+        
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Scrypt}
+    \begin{minted}{haskell}
+        print $ verifyPass keyParams (Pass "myPassword") encrypted
+        -- (True, Nothing)
+        print $ verifyPass keyParams (Pass "MyPassword") encrypted
+        -- (False, Nothing)
+
+        let strongerParams = fromJust $ scryptParams 16 8 1
+        
+        
+        
+        
+        
+    \end{minted}
+  \end{frame}
+
+  \begin{frame}[fragile]{Scrypt}
+    \begin{minted}{haskell}
+        print $ verifyPass defaultParams (Pass "myPassword") encrypted
+        -- (True, Nothing)
+        print $ verifyPass defaultParams (Pass "MyPassword") encrypted
+        -- (False, Nothing)
+
+        let strongerParams = fromJust $ scryptParams 16 8 1
+        
+        print $ verifyPass strongerParams (Pass "myPassword") encrypted
+        -- (True, Just (EncryptedPass {
+        --     getEncryptedPass = "16|8|1|..salt..|..hash.."
+        -- }))
+    \end{minted}
+  \end{frame}
+
+\end{document}
+
